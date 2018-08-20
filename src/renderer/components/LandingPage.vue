@@ -9,13 +9,16 @@
 <script>
   import * as PIXI from 'pixi.js'
 
-  const FRAME_DURATION = 25.0 / 60.0
+  const VIDEO_WIDTH = 1280
+  const VIDEO_HEIGHT = 720
+
+  // const FRAME_DURATION = 25.0 / 60.0
 
   const BRUSH_SCALE_MIN = 0.1
   const BRUSH_SCALE_MAX = 2.0
   const BRUSH_SCALE_INC = 0.1
 
-  // const MASK_ALPHA = 0.5
+  const MASK_ALPHA = 0.5
 
   export default {
     name: 'landing-page',
@@ -24,6 +27,7 @@
         helperCanvas: null,
         video: null,
         PIXIApp: null,
+        maskTexture: null,
         brush: null,
         brushAsset: null,
         resources: null,
@@ -60,72 +64,46 @@
       //
       initializePIXI () {
         console.log('@initializePIXI')
-        let w = 1280 // this.video.videoWidth
-        let h = 720 // this.video.videoHeight
-        const c = this.$refs.overlay
-        // c.width = w
-        // c.height = h
+        let videoW = VIDEO_WIDTH
+        let videoH = VIDEO_HEIGHT
+        const canvas = this.$refs.overlay
+        // canvas.width = w
+        // canvas.height = h
 
-        this.PIXIApp = new PIXI.Application(w, h, {
-          view: c,
+        this.PIXIApp = new PIXI.Application(videoW, videoH, {
+          view: canvas,
           transparent: true
         })
 
-        let stage = this.PIXIApp.stage
+        let app = this.PIXIApp
 
         // Create the brush
 
-        // let brush = new PIXI.Container()
-        // let brushAsset = new PIXI.Sprite(this.resources['brush'].texture)
-        // brush.addChild(brushAsset)
-        // brushAsset.anchor.x = 0.5
-        // brushAsset.anchor.y = 0.5
-        // this.brush = brush
-        // this.brushAsset = brushAsset
-        // this.brushSetErase(true)
+        let brush = new PIXI.Container()
+        let brushAsset = new PIXI.Sprite(this.resources['brush'].texture)
+        brush.addChild(brushAsset)
+        brushAsset.anchor.x = 0.5
+        brushAsset.anchor.y = 0.5
+        this.brush = brush
+        this.brushAsset = brushAsset
+        this.brushSetErase(true)
 
         // Create video playback layer
 
-        /*
-        // create a video texture from a path
-        var texture = PIXI.Texture.fromVideo('required/assets/testVideo.mp4')
-        // create a new Sprite using the video texture (yes it's that easy)
-        var videoSprite = new PIXI.Sprite(texture)
-        // Stetch the fullscreen
-        videoSprite.width = w
-        videoSprite.height = h
-        stage.addChild(videoSprite)
-        */
-
-        /*
-        // eslint-disable-next-line
-        let videoTexture = new PIXI.VideoBaseTexture.fromUrl('test-movie')
-        // eslint-disable-next-line
-        let video = new PIXI.Sprite.from(videoTexture)
-        video.width = w
-        video.height = h
-        stage.addChild(video)
-        videoTexture.source.play()
-        */
         let videoTexture = PIXI.Texture.fromVideo('/static/mg.mp4')
         let videoSprite = new PIXI.Sprite(videoTexture)
-        videoSprite.width = w
-        videoSprite.height = h
-        stage.addChild(videoSprite)
-        // videoTexture.baseTexture.source.play()
-
-        console.log(videoTexture.hasLoaded)
-        window.videoTexture = videoTexture
+        videoSprite.width = videoW
+        videoSprite.height = videoH
+        app.stage.addChild(videoSprite)
 
         // Create (w x h) black and white texture.
         // Initially, the masked area is totally blank
-        /*
-        this.maskTexture = PIXI.RenderTexture.create(w, h)
-        let t = new PIXI.Graphics()
-        t.beginFill(0xFFFFFF)
-        t.drawRect(0, 0, w, h)
-        t.endFill()
-        this.PIXIApp.renderer.render(t, this.maskTexture)
+        this.maskTexture = PIXI.RenderTexture.create(videoW, videoH)
+        let graphic = new PIXI.Graphics()
+        graphic.beginFill(0xFFFFFF)
+        graphic.drawRect(0, 0, videoW, videoH)
+        graphic.endFill()
+        this.PIXIApp.renderer.render(graphic, this.maskTexture)
 
         // Create a sprites from the maskTexture
         // - maskTextureSprite will be applied as effective mask.
@@ -137,25 +115,19 @@
         this.maskTextureSprite = new PIXI.Sprite(this.maskTexture)
         this.maskTextureVisual = new PIXI.Sprite(this.maskTexture)
         this.maskTextureVisual.alpha = MASK_ALPHA
-        stage.addChild(this.maskTextureVisual)
+        app.stage.addChild(this.maskTextureVisual)
 
-        stage.interactive = true
-        stage.on('pointerdown', this.pointerDown)
-        stage.on('pointerup', this.pointerUp)
-        stage.on('pointermove', this.pointerMove)
-        */
-      },
-      animate () {
-        // render the stage
-        this.PIXIApp.renderer.render(this.PIXIApp.stage)
-        requestAnimationFrame(this.animate)
+        app.stage.interactive = true
+        app.stage.on('pointerdown', this.pointerDown)
+        app.stage.on('pointerup', this.pointerUp)
+        app.stage.on('pointermove', this.pointerMove)
       },
       // - Handle brush events
       pointerMove (event) {
         if (this.dragging) {
           console.log('pointerMove')
           this.brush.position.copy(event.data.global)
-          // this.PIXIApp.renderer.render(this.brush, this.maskTexture, false, null, false)
+          this.PIXIApp.renderer.render(this.brush, this.maskTexture, false, null, false)
         }
       },
       pointerDown (event) {
@@ -171,92 +143,64 @@
       // - CONTROLS
       //
       videoTogglePlay () {
-        if (this.video.paused) {
-          this.video.play()
-        } else {
-          this.video.pause()
-        }
+        console.log('videoTogglePlay')
+        // if (this.video.paused) {
+        //   this.video.play()
+        // } else {
+        //   this.video.pause()
+        // }
       },
       videoPrevFrame () {
-        if (this.video.paused) {
-          let v = this.video
-          let t = v.currentTime - FRAME_DURATION
-          if (t < 0) {
-            console.warn('videoNextFrame: start of media reached')
-            t = 0
-          }
-          // v.fastSeek(t)
-          v.currentTime = t
-        } else {
-          console.warn('videoNextFrame: can\'t jump prev frame while playing')
-        }
+        console.log('videoPrevFrame')
+        // if (this.video.paused) {
+        //   let v = this.video
+        //   let t = v.currentTime - FRAME_DURATION
+        //   if (t < 0) {
+        //     console.warn('videoNextFrame: start of media reached')
+        //     t = 0
+        //   }
+        //   // v.fastSeek(t)
+        //   v.currentTime = t
+        // } else {
+        //   console.warn('videoNextFrame: can\'t jump prev frame while playing')
+        // }
       },
       videoNextFrame () {
-        if (this.video.pause) {
-          let v = this.video
-          let t = v.currentTime + FRAME_DURATION
-          if (t > v.duration) {
-            console.warn('videoNextFrame: end of media reached')
-            t = v.duration
-          }
-          // v.fastSeek(t)
-          v.currentTime = t
-        } else {
-          console.warn('videoNextFrame: can\'t jump next frame while playing')
-        }
+        console.log('videoPrevFrame')
+        // if (this.video.pause) {
+        //   let v = this.video
+        //   let t = v.currentTime + FRAME_DURATION
+        //   if (t > v.duration) {
+        //     console.warn('videoNextFrame: end of media reached')
+        //     t = v.duration
+        //   }
+        //   // v.fastSeek(t)
+        //   v.currentTime = t
+        // } else {
+        //   console.warn('videoNextFrame: can\'t jump next frame while playing')
+        // }
       },
       preview () {
         console.log('@preview')
-        this.video.currentTime = 0
-        this.video.play()
+        // this.video.currentTime = 0
+        // this.video.play()
         // this.draw()
       },
-      /*
-      draw () {
-        let time = this.video.currentTime
-        if (time !== this.lastTime) {
-          console.log('time: ' + time)
-          // todo: do your rendering here
-
-          // // -----------------------------------------------------------
-          // // -----------------------------------------------------------
-          // this.video.pause()
-          // console.log('@capture')
-          // let c = this.helperCanvas
-          // c.width = this.video.videoWidth
-          // c.height = this.video.videoHeight
-          // c.getContext('2d').drawImage(this.video, 0, 0, c.width, c.height)
-          // if (this.playback) {
-          //   this.playback.destroy()
-          // }
-          // this.playback = PIXI.Sprite.fromImage(c.toDataURL())
-          // // this.playback.mask = this.maskTextureSprite
-          // this.PIXIApp.stage.addChildAt(this.playback, 0)
-          // this.video.play()
-          // // -----------------------------------------------------------
-          // // -----------------------------------------------------------
-
-          this.lastTime = time
-        }
-        // wait approximately 16ms and run again
-        requestAnimationFrame(this.draw)
-      },
-      */
       capture () {
         // capture : set the current video frame as the new still frame picture.
         // If a still frame is yet setted, destroy it's sprite to create a new one
         // Then add it on top of all elements
         console.log('@capture')
-        let c = this.helperCanvas
-        c.width = this.video.videoWidth
-        c.height = this.video.videoHeight
-        c.getContext('2d').drawImage(this.video, 0, 0, c.width, c.height)
-        if (this.overlay) {
-          this.overlay.destroy()
-        }
-        this.overlay = PIXI.Sprite.fromImage(c.toDataURL())
-        this.overlay.mask = this.maskTextureSprite
-        this.PIXIApp.stage.addChildAt(this.overlay, 0)
+        // let c = this.helperCanvas
+        // c.width = this.video.videoWidth
+        // c.height = this.video.videoHeight
+        // c.getContext('2d').drawImage(this.video, 0, 0, c.width, c.height)
+        // if (this.overlay) {
+        //   this.overlay.destroy()
+        // }
+        // this.overlay = PIXI.Sprite.fromImage(c.toDataURL())
+        // this.overlay.mask = this.maskTextureSprite
+        // this.PIXIApp.stage.addChildAt(this.overlay, 0)
       },
       toggleOverlay () {
         if (this.overlay) {
