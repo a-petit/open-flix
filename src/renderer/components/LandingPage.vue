@@ -7,6 +7,25 @@
 </template>
 
 <script>
+export default {
+
+}
+</script>
+
+<script>
+  /* Programme, dans l'ordre :
+  - mettre à jour les fonctionnalités vidéo sur la version PIXI (attacher la video ?)
+  - gestion de l'export
+  - gestion de la preview
+  - intégration dans Socialite :
+    * brush/erase
+    * brush ++/--
+    * preview
+    * terminé
+    La première image de la vidéo est choisie de façon automatique comme still frame.
+  - fonctionnalités hardness, opacity
+  */
+
   import * as PIXI from 'pixi.js'
 
   const VIDEO_WIDTH = 1280
@@ -25,7 +44,6 @@
     data () {
       return {
         helperCanvas: null,
-        video: null,
         PIXIApp: null,
         maskTexture: null,
         brush: null,
@@ -33,7 +51,6 @@
         resources: null,
         overlay: null,
         dragging: false,
-        lastTime: -1,
         scale: 1.0,
         state: {
           erasing: false
@@ -122,7 +139,9 @@
         app.stage.on('pointerup', this.pointerUp)
         app.stage.on('pointermove', this.pointerMove)
       },
+      //
       // - Handle brush events
+      //
       pointerMove (event) {
         if (this.dragging) {
           console.log('pointerMove')
@@ -304,12 +323,12 @@
 
   body { 
     font-family: 'Source Sans Pro', sans-serif; 
-    background-color: 'rebeccapurple';
   }
 
   #wrapper {
     height: 100vh;
     width: 100vw;
+    background-color: rebeccapurple;
   }
 
   #video, #overlay-wrapper {
