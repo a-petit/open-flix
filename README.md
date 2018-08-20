@@ -1,15 +1,28 @@
-# little-flix
+# open-flix
 
 > Prototyping home-made flixel
+
+#### Keyboard controls
+
+'a': video -- toggle play
+'z': video -- previous frame
+'e': video -- next     frame
+
+'q': lock current frame (still)
+'s': toggle show/hide still frame
+'d': toggle show/hide mask
+'w': brush -- scale up
+'x': brush -- scale down
+'c': brush -- toggle erase/fill
 
 #### Build Setup
 
 ``` bash
 # install dependencies
-npm install
+npm install (or yarn)
 
 # serve with hot reload at localhost:9080
-npm run dev
+npm run dev (or yarn run dev)
 
 # build electron application for production
 npm run build
