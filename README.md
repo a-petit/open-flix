@@ -4,6 +4,7 @@
 
 #### Keyboard controls
 
+```
 'a': video -- toggle play
 'z': video -- previous frame
 'e': video -- next     frame
@@ -14,6 +15,7 @@
 'w': brush -- scale up
 'x': brush -- scale down
 'c': brush -- toggle erase/fill
+```
 
 #### Build Setup
 
