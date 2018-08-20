@@ -36,19 +36,6 @@
         }
       }
     },
-    /*
-    computed: {
-      videoReady () {
-        return this.video ? this.video.readyState : 0
-      }
-    },
-    watch: {
-      videoReady: function (value) {
-        console.log('video ready', value)
-        // this.initializePIXI()
-      }
-    },
-    */
     methods: {
       preload () {
         console.log('@preload')
@@ -120,13 +107,12 @@
         stage.addChild(video)
         videoTexture.source.play()
         */
-        let videoTexture = PIXI.Texture.fromVideo('test-movie')
-        // eslint-disable-next-line
-        let video = new PIXI.Sprite(videoTexture)
-        video.width = w
-        video.height = h
-        stage.addChild(video)
-        videoTexture.baseTexture.source.play()
+        let videoTexture = PIXI.Texture.fromVideo('/static/mg.mp4')
+        let videoSprite = new PIXI.Sprite(videoTexture)
+        videoSprite.width = w
+        videoSprite.height = h
+        stage.addChild(videoSprite)
+        // videoTexture.baseTexture.source.play()
 
         console.log(videoTexture.hasLoaded)
         window.videoTexture = videoTexture
