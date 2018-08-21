@@ -7,12 +7,6 @@
 </template>
 
 <script>
-export default {
-
-}
-</script>
-
-<script>
   /* Programme, dans l'ordre :
   - mettre à jour les fonctionnalités vidéo sur la version PIXI (attacher la video ?)
   - gestion de l'export
@@ -27,6 +21,7 @@ export default {
   */
 
   import * as PIXI from 'pixi.js'
+  import Recorder from '../../js/recorder'
 
   const VIDEO_WIDTH = 1280
   const VIDEO_HEIGHT = 720
@@ -51,6 +46,7 @@ export default {
         resources: null,
         overlay: null,
         dragging: false,
+        recorder: null,
         scale: 1.0,
         state: {
           erasing: false
@@ -74,6 +70,7 @@ export default {
 
         this.resources = resources
         this.helperCanvas = document.createElement('canvas')
+        this.recorder = new Recorder(this.$refs.overlay.captureStream())
         this.initializePIXI()
       },
       //
@@ -138,6 +135,15 @@ export default {
         app.stage.on('pointerdown', this.pointerDown)
         app.stage.on('pointerup', this.pointerUp)
         app.stage.on('pointermove', this.pointerMove)
+
+        let vm = this
+        setTimeout(() => {
+          vm.recorder.startRecording()
+          setTimeout(() => {
+            vm.recorder.stopRecording()
+            vm.recorder.download()
+          }, 10000)
+        }, 5000)
       },
       //
       // - Handle brush events
@@ -321,8 +327,8 @@ export default {
     padding: 0;
   }
 
-  body { 
-    font-family: 'Source Sans Pro', sans-serif; 
+  body {
+    font-family: 'Source Sans Pro', sans-serif;
   }
 
   #wrapper {
@@ -336,5 +342,5 @@ export default {
     top: 0;
     left: 0;
   }
-  
+
 </style>
