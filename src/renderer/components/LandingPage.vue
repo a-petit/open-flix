@@ -8,13 +8,13 @@
 
 <script>
   /* Programme, dans l'ordre :
-  - Preload de la vidéo
+  D Preload de la vidéo
+  D mettre à jour les fonctionnalités vidéo sur la version PIXI (attacher la video ?)
+  D gestion de l'export
   - gestion de la preview (dans socialite) :
     * lire la vidéo (une fois)
     * désactiver le reste de l'interface, ou masquer, (brush settings, complete, ...)
     * masquer maskSprite
-  D mettre à jour les fonctionnalités vidéo sur la version PIXI (attacher la video ?)
-  D gestion de l'export
   - intégration dans Socialite :
     * brush/erase
     * brush ++/--
@@ -70,18 +70,13 @@
       },
       initialize (loader, resources) {
         console.log('@initialize', loader, resources)
-        window.resources = resources
-        window.loader = loader
-
-        this.resources = resources
-        this.helperCanvas = document.createElement('canvas')
         this.recorder = new Recorder(this.$refs.overlay.captureStream())
-        this.initializePIXI()
+        this.initializePIXI(loader, resources)
       },
       //
       // - PIXI
       //
-      initializePIXI () {
+      initializePIXI (loader, resources) {
         console.log('@initializePIXI')
         let videoW = VIDEO_WIDTH
         let videoH = VIDEO_HEIGHT
@@ -93,13 +88,12 @@
           view: canvas,
           transparent: true
         })
-
         let app = this.PIXIApp
 
         // Create the brush
 
         let brushSprite = new PIXI.Container()
-        let brushAsset = new PIXI.Sprite(this.resources['brush'].texture)
+        let brushAsset = new PIXI.Sprite(resources['brush'].texture)
         brushSprite.addChild(brushAsset)
         brushAsset.anchor.x = 0.5
         brushAsset.anchor.y = 0.5
@@ -109,13 +103,11 @@
 
         // Create video playback layer
 
-        // console.log(this.resources['test-movie'])
-
-        let videoData = this.resources['test-movie'].data
+        let videoData = resources['test-movie'].data
         let videoBaseTexture = PIXI.VideoBaseTexture.fromVideo(videoData)
         let videoSprite = PIXI.Sprite.from(videoBaseTexture)
-        videoSprite.width = videoW
-        videoSprite.height = videoH
+        // videoSprite.width = videoW
+        // videoSprite.height = videoH
         app.stage.addChild(videoSprite)
         this.videoSprite = videoSprite
 
@@ -153,6 +145,8 @@
         app.stage.on('pointerdown', this.pointerDown)
         app.stage.on('pointerup', this.pointerUp)
         app.stage.on('pointermove', this.pointerMove)
+
+        this.capture()
 
         let vm = this
         vm.recorder.startRecording()
