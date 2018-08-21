@@ -8,8 +8,8 @@
 
 <script>
   /* Programme, dans l'ordre :
-  - mettre à jour les fonctionnalités vidéo sur la version PIXI (attacher la video ?)
-  - gestion de l'export
+  D mettre à jour les fonctionnalités vidéo sur la version PIXI (attacher la video ?)
+  D gestion de l'export
   - gestion de la preview
   - intégration dans Socialite :
     * brush/erase
@@ -41,10 +41,11 @@
         helperCanvas: null,
         PIXIApp: null,
         maskTexture: null,
-        brush: null,
+        videoSprite: null,
         brushAsset: null,
-        resources: null,
-        overlay: null,
+        brushSprite: null,
+        stillTexture: null,
+        stillSprite: null,
         dragging: false,
         recorder: null,
         scale: 1.0,
@@ -93,12 +94,12 @@
 
         // Create the brush
 
-        let brush = new PIXI.Container()
+        let brushSprite = new PIXI.Container()
         let brushAsset = new PIXI.Sprite(this.resources['brush'].texture)
-        brush.addChild(brushAsset)
+        brushSprite.addChild(brushAsset)
         brushAsset.anchor.x = 0.5
         brushAsset.anchor.y = 0.5
-        this.brush = brush
+        this.brushSprite = brushSprite
         this.brushAsset = brushAsset
         this.brushSetErase(true)
 
@@ -109,41 +110,51 @@
         videoSprite.width = videoW
         videoSprite.height = videoH
         app.stage.addChild(videoSprite)
+        this.videoSprite = videoSprite
 
         // Create (w x h) black and white texture.
         // Initially, the masked area is totally blank
-        this.maskTexture = PIXI.RenderTexture.create(videoW, videoH)
+        let maskTexture = PIXI.RenderTexture.create(videoW, videoH)
         let graphic = new PIXI.Graphics()
         graphic.beginFill(0xFFFFFF)
         graphic.drawRect(0, 0, videoW, videoH)
         graphic.endFill()
-        this.PIXIApp.renderer.render(graphic, this.maskTexture)
+        this.PIXIApp.renderer.render(graphic, maskTexture)
+        this.maskTexture = maskTexture
 
         // Create a sprites from the maskTexture
-        // - maskTextureSprite will be applied as effective mask.
+        // - maskSprite will be applied as effective mask.
         //   It has a plain opacity and presents maskTexture as it is.
-        // - maskTextureVisual will be displayed.
+        // - maskVisual will be displayed.
         //   It has a reduced opacity and will provide a feedback to the user,
         //   helping him to draw the shape of the mask.
+        let maskSprite = new PIXI.Sprite(this.maskTexture)
+        let maskVisual = new PIXI.Sprite(this.maskTexture)
+        maskVisual.alpha = MASK_ALPHA
+        this.maskVisual = maskVisual
 
-        this.maskTextureSprite = new PIXI.Sprite(this.maskTexture)
-        this.maskTextureVisual = new PIXI.Sprite(this.maskTexture)
-        this.maskTextureVisual.alpha = MASK_ALPHA
-        app.stage.addChild(this.maskTextureVisual)
+        let stillTexture = PIXI.RenderTexture.create(videoW, videoH)
+        let stillSprite = new PIXI.Sprite(stillTexture)
+        stillSprite.mask = maskSprite
+        this.stillTexture = stillTexture
+        this.stillSprite = stillSprite
+
+        app.stage.addChild(stillSprite)
+        app.stage.addChild(maskVisual)
 
         app.stage.interactive = true
         app.stage.on('pointerdown', this.pointerDown)
         app.stage.on('pointerup', this.pointerUp)
         app.stage.on('pointermove', this.pointerMove)
 
-        let vm = this
-        setTimeout(() => {
-          vm.recorder.startRecording()
-          setTimeout(() => {
-            vm.recorder.stopRecording()
-            vm.recorder.download()
-          }, 10000)
-        }, 5000)
+        // let vm = this
+        // setTimeout(() => {
+        //   vm.recorder.startRecording()
+        //   setTimeout(() => {
+        //     vm.recorder.stopRecording()
+        //     vm.recorder.download()
+        //   }, 10000)
+        // }, 5000)
       },
       //
       // - Handle brush events
@@ -151,8 +162,8 @@
       pointerMove (event) {
         if (this.dragging) {
           console.log('pointerMove')
-          this.brush.position.copy(event.data.global)
-          this.PIXIApp.renderer.render(this.brush, this.maskTexture, false, null, false)
+          this.brushSprite.position.copy(event.data.global)
+          this.PIXIApp.renderer.render(this.brushSprite, this.maskTexture, false, null, false)
         }
       },
       pointerDown (event) {
@@ -216,6 +227,9 @@
         // If a still frame is yet setted, destroy it's sprite to create a new one
         // Then add it on top of all elements
         console.log('@capture')
+        this.PIXIApp.renderer.render(this.videoSprite, this.stillTexture)
+        // render video layer into overlay layer
+
         // let c = this.helperCanvas
         // c.width = this.video.videoWidth
         // c.height = this.video.videoHeight
@@ -224,18 +238,16 @@
         //   this.overlay.destroy()
         // }
         // this.overlay = PIXI.Sprite.fromImage(c.toDataURL())
-        // this.overlay.mask = this.maskTextureSprite
+        // this.overlay.mask = this.maskSprite
         // this.PIXIApp.stage.addChildAt(this.overlay, 0)
       },
-      toggleOverlay () {
-        if (this.overlay) {
-          this.overlay.visible = !this.overlay.visible
-          console.log('toggleOverlay:', this.overlay.visible)
-        }
+      toggleStillSprite () {
+        this.stillSprite.visible = !this.stillSprite.visible
+        console.log('toggleStillSprite:', this.stillSprite.visible)
       },
-      toggleMask () {
-        this.maskTextureVisual.visible = !this.maskTextureVisual.visible
-        console.log('toggleMask:', this.maskTextureVisual.visible)
+      toggleMaskDisplay () {
+        this.maskVisual.visible = !this.maskVisual.visible
+        console.log('toggleMaskDisplay:', this.maskVisual.visible)
       },
 
       brushScale (scale) {
@@ -302,8 +314,8 @@
         'z': this.videoPrevFrame,
         'e': this.videoNextFrame,
         'q': this.capture,
-        's': this.toggleOverlay,
-        'd': this.toggleMask,
+        's': this.toggleStillSprite,
+        'd': this.toggleMaskDisplay,
         'w': this.brushScaleUp,
         'x': this.brushScaleDown,
         'c': this.brushToggleErase
