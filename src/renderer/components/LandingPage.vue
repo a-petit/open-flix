@@ -8,9 +8,13 @@
 
 <script>
   /* Programme, dans l'ordre :
+  - Preload de la vidéo
+  - gestion de la preview (dans socialite) :
+    * lire la vidéo (une fois)
+    * désactiver le reste de l'interface, ou masquer, (brush settings, complete, ...)
+    * masquer maskSprite
   D mettre à jour les fonctionnalités vidéo sur la version PIXI (attacher la video ?)
   D gestion de l'export
-  - gestion de la preview
   - intégration dans Socialite :
     * brush/erase
     * brush ++/--
@@ -105,8 +109,11 @@
 
         // Create video playback layer
 
-        let videoTexture = PIXI.Texture.fromVideo('/static/mg.mp4')
-        let videoSprite = new PIXI.Sprite(videoTexture)
+        // console.log(this.resources['test-movie'])
+
+        let videoData = this.resources['test-movie'].data
+        let videoBaseTexture = PIXI.VideoBaseTexture.fromVideo(videoData)
+        let videoSprite = PIXI.Sprite.from(videoBaseTexture)
         videoSprite.width = videoW
         videoSprite.height = videoH
         app.stage.addChild(videoSprite)
@@ -147,14 +154,12 @@
         app.stage.on('pointerup', this.pointerUp)
         app.stage.on('pointermove', this.pointerMove)
 
-        // let vm = this
-        // setTimeout(() => {
-        //   vm.recorder.startRecording()
-        //   setTimeout(() => {
-        //     vm.recorder.stopRecording()
-        //     vm.recorder.download()
-        //   }, 10000)
-        // }, 5000)
+        let vm = this
+        vm.recorder.startRecording()
+        setTimeout(() => {
+          vm.recorder.stopRecording()
+          vm.recorder.download()
+        }, 10000)
       },
       //
       // - Handle brush events
